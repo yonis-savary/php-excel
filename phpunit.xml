@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit
+    displayDetailsOnTestsThatTriggerDeprecations="true"
+    displayDetailsOnTestsThatTriggerErrors="true"
+    displayDetailsOnTestsThatTriggerNotices="true"
+    displayDetailsOnTestsThatTriggerWarnings="true"
+    displayDetailsOnPhpunitDeprecations="true"
+    failOnRisky="true"
+    failOnWarning="true"
+    stopOnFailure="true"
+    stopOnError="true"
+>
+    <testsuites>
+        <testsuite name="PHP-Excel Unit Tests">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+</phpunit>

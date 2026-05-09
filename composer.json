@@ -1,0 +1,30 @@
+{
+    "name": "yonis-savary/php-excel",
+    "description": "Excel Reading/Writing + Formula Engine for PHP !",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "PhpExcel\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "yonis-savary",
+            "email": "yonissavary@outlook.fr"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require-dev": {
+        "phpunit/phpunit": "^13.2@dev"
+    },
+    "require": {
+        "doctrine/collections": "4.0.x-dev",
+        "illuminate/collections": "13.x-dev"
+    }
+}
