@@ -1,12 +1,12 @@
 <?php
 
-namespace PhpExcel\Processing\Tokens;
+namespace PhpExcel\Processing\Expressions\Comparisons;
 
 use Override;
-use PhpExcel\Processing\Expression;
+use PhpExcel\Processing\Expressions\Expression;
 use PhpExcel\Xlsx\SpreadSheet;
 
-class Subtraction extends Expression {
+class Equal extends Expression {
     public function __construct(
         protected Expression $exA,
         protected Expression $exB,
@@ -16,6 +16,6 @@ class Subtraction extends Expression {
     #[Override]
     public function getValue(SpreadSheet $spreadSheet): mixed
     {
-        return $this->exA->getValue($spreadSheet) - $this->exB->getValue($spreadSheet);
+        return $this->exA->getValue($spreadSheet) == $this->exB->getValue($spreadSheet);
     }
 }

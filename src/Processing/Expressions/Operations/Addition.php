@@ -1,9 +1,9 @@
 <?php
 
-namespace PhpExcel\Processing\Tokens;
+namespace PhpExcel\Processing\Expressions\Operations;
 
 use Override;
-use PhpExcel\Processing\Expression;
+use PhpExcel\Processing\Expressions\Expression;
 use PhpExcel\Xlsx\SpreadSheet;
 
 class Addition extends Expression {

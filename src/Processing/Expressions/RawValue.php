@@ -1,9 +1,8 @@
 <?php
 
-namespace PhpExcel\Processing\Tokens;
+namespace PhpExcel\Processing\Expressions;;
 
 use Override;
-use PhpExcel\Processing\Expression;
 use PhpExcel\Xlsx\SpreadSheet;
 
 class RawValue extends Expression

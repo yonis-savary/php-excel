@@ -1,6 +1,6 @@
 <?php
 
-namespace PhpExcel\Processing;
+namespace PhpExcel\Processing\Expressions;
 
 use PhpExcel\Xlsx\SpreadSheet;
 

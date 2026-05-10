@@ -1,12 +1,12 @@
 <?php
 
-namespace PhpExcel\Processing\Tokens;
+namespace PhpExcel\Processing\Expressions\Comparisons;
 
 use Override;
-use PhpExcel\Processing\Expression;
+use PhpExcel\Processing\Expressions\Expression;
 use PhpExcel\Xlsx\SpreadSheet;
 
-class Multiply extends Expression {
+class GreaterThan extends Expression {
     public function __construct(
         protected Expression $exA,
         protected Expression $exB,
@@ -16,6 +16,6 @@ class Multiply extends Expression {
     #[Override]
     public function getValue(SpreadSheet $spreadSheet): mixed
     {
-        return $this->exA->getValue($spreadSheet)  * $this->exB->getValue($spreadSheet);
+        return $this->exA->getValue($spreadSheet) > $this->exB->getValue($spreadSheet);
     }
 }
