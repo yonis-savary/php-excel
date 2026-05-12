@@ -33,8 +33,8 @@ $s->save('output-file.xlsx') // <= Todo
 | ✅ | Formula tokenization/parsing system |
 | ✅ | Basic Operator supports (+,-,*,/,>,<,<=,<=,=) |
 | ✅ | Sheet name support for cell name |
+| ✅ | Implements Cell Range system |
 | ⏳ | Possibility to save a new or edited spreadsheet |
-| ⏳ | Implements Cell Range system |
 | ⏳ | Implements basics Excel functions such as SUM, POW, SQRT... |
 | ⏳ | Recursion detection system |
 | ⏳ | Write more tests for existing already features |
