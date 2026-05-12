@@ -7,7 +7,7 @@ Features :
  - Making additions / modifications to existing files and formulas
  - Supporting formulas and cell logic
 
-# Usage
+## Usage
 
 ```php
 // From an existing file
@@ -25,7 +25,21 @@ $s->save('output-file.xlsx') // <= Todo
 
 ```
 
-# Tests
+## Roadmap
+
+| Status | Task |
+|--------|------|
+| ✅ | Opening/parsing an existing file |
+| ✅ | Formula tokenization/parsing system |
+| ✅ | Basic Operator supports (+,-,*,/,>,<,<=,<=,=) |
+| ✅ | Sheet name support for cell name |
+| ⏳ | Possibility to save a new or edited spreadsheet |
+| ⏳ | Implements Cell Range system |
+| ⏳ | Implements basics Excel functions such as SUM, POW, SQRT... |
+| ⏳ | Recursion detection system |
+| ⏳ | Write more tests for existing already features |
+
+## Tests
 
 ```sh
 composer install
