@@ -5,7 +5,7 @@ namespace PhpExcel\Processing\Tokens;
 use PhpExcel\Processing\StringStream;
 use RuntimeException;
 
-class Tokenisator {
+class Tokenizator {
     protected StringStream $stream;
 
     public static function tokenize(string $string): TokenGroup {
@@ -66,7 +66,7 @@ class Tokenisator {
 
             if (!count($parenthesisStack)) {
                 $substring = substr($parenthesisContent, 0, -1);
-                return (new Tokenisator($substring))->getTokenGroup();
+                return (new Tokenizator($substring))->getTokenGroup();
             }
         }
 
