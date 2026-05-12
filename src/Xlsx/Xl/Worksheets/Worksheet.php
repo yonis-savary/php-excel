@@ -41,7 +41,7 @@ class Worksheet extends ArchiveFile
     }
 
     public function write(string $cellName, string $valueOrFormula): Cell {
-        list($column, $row) = $this->parseAddress($cellName);
+        list($column, $row) = $this->parseAddress($cellName)->toArray();
         if (!array_key_exists($row, $this->rows)) {
             $this->rows[$row] = new Row();
             $this->rows[$row]->number = $row;

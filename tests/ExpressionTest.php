@@ -22,7 +22,8 @@ class ExpressionTest extends TestCase
             'support_if_else' => ['IF(10<1;"yes";"no")', 'no'],
             'support_greater_or_equal__greater' => ['IF(5>=1;"ok";"not ok")', "ok"],
             'support_greater_or_equal__equal' => ['IF(5>=5;"ok";"not ok")', "ok"],
-            'support_nested_function' => ['IF(1<2; ABS(10-20); 0)', 10]
+            'support_nested_function' => ['IF(1<2; ABS(10-20); 0)', 10],
+            'support_sum_function' => ['SUM(1;2;3)', 6]
         ];
     }
 

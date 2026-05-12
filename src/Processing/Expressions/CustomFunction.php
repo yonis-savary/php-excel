@@ -4,19 +4,25 @@ namespace PhpExcel\Processing\Expressions;;
 
 use Override;
 use PhpExcel\Processing\Expressions\Functions\Abs;
+use PhpExcel\Processing\Expressions\Functions\CustomFunctionHandler;
 use PhpExcel\Processing\Expressions\Functions\IfCondition;
+use PhpExcel\Processing\Expressions\Functions\Sum;
 use PhpExcel\Xlsx\SpreadSheet;
 use RuntimeException;
 
 class CustomFunction extends Expression
 {
     const SUPPORTED_FUNCTIONS = [
-        'abs',
-        'if'
+        'abs' => Abs::class,
+        'if' => IfCondition::class,
+        'sum' => Sum::class
     ];
 
     /** @var Expression[] */
     protected array $parameterExpressions = [];
+
+    /** @var class-string<CustomFunctionHandler> */
+    protected string $functionClass;
 
     public function __construct(
         protected string $functionName,
@@ -26,17 +32,15 @@ class CustomFunction extends Expression
         $this->functionName = strtolower($this->functionName); // normalize
         $this->parameterExpressions = $parameterExpressions;
 
-        if (!in_array($this->functionName, self::SUPPORTED_FUNCTIONS))
+        if (!array_key_exists($this->functionName, self::SUPPORTED_FUNCTIONS))
             throw new RuntimeException("Unsupported function [$functionName]");
+
+        $this->functionClass = self::SUPPORTED_FUNCTIONS[$this->functionName];
     }
 
     #[Override]
 	public function getValue(SpreadSheet $spreadSheet): mixed
     {
-        switch ($this->functionName) {
-            case 'abs': return Abs::createAndHandle($spreadSheet, ...$this->parameterExpressions);
-            case 'if': return IfCondition::createAndHandle($spreadSheet, ...$this->parameterExpressions);
-        }
-        throw new RuntimeException("Fatal: Unsupported function [$this->functionName]");
+        return $this->functionClass::createAndHandle($spreadSheet, ...$this->parameterExpressions);
     }
 }

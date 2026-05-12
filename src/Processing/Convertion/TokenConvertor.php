@@ -4,6 +4,7 @@ namespace PhpExcel\Processing\Convertion;
 
 use PhpExcel\Abstract\CellUtils;
 use PhpExcel\Processing\Expressions\Cell;
+use PhpExcel\Processing\Expressions\CellRange;
 use PhpExcel\Processing\Expressions\Operations\Addition;
 use PhpExcel\Processing\Expressions\Operations\Division;
 use PhpExcel\Processing\Expressions\Operations\Multiplication;
@@ -91,9 +92,13 @@ class TokenConvertor
                 case '/': return new Division($restAsExpression(), $lastExpression);
             }
 
-            $lastExpression = $this->isCellAddress($token->string)
-                ? new Cell($token->string)
-                : new RawValue($token->string);
+            $tokenValue = (string) $token;
+            if ($this->isCellAddress($tokenValue))
+                $lastExpression = new Cell($tokenValue);
+            else if ($this->isCellRange($tokenValue))
+                $lastExpression = new CellRange($tokenValue);
+            else 
+                $lastExpression = new RawValue($token->string);
         }
         return $lastExpression;
     }

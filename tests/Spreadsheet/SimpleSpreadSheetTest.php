@@ -28,8 +28,23 @@ class SimpleSpreadSheetTest extends TestCase
         $s = new SpreadSheet();
         $s->write('A1', '3');
         $s->write('B1', '5');
-        $s->write('C1', '=A1+B1');
 
+        $s->write('C1', '=A1+B1');
         $this->assertEquals('8', $s->query('C1'));
+
+        $s->write('C1', '=$A1+B$1');
+        $this->assertEquals('8', $s->query('C1'));
+    }
+
+    public function testSumOrRange() {
+        $s = new SpreadSheet();
+        $s->writeAssoc([
+            'A1' => 2,
+            'A2' => 3,
+            'A3' => 10,
+            'A4' => '=SUM(A1:A3)'
+        ]);
+
+        $this->assertEquals(15, $s->query('A4'));
     }
 }

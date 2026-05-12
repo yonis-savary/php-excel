@@ -186,13 +186,24 @@ class SpreadSheet extends XMLHolder
     public function write(string $address, string $valueOrFormula): Cell {
         $this->createDefaultSheetOnEmpty();
 
-        list($_, $__, $sheetName) = $this->parseAddress($address);
+        $sheetName = $this->parseAddress($address)->sheet;
 
         $sheet = $sheetName
             ? $this->getSheet($sheetName)
             : $this->getActiveSheet();
 
         return $sheet->write($address, $valueOrFormula);
+    }
+
+    /**
+     * @param array $assocArray as $address => $valueOrFormula
+     */
+    public function writeAssoc(array $assocArray): void {
+        if (array_is_list($assocArray))
+            throw new InvalidArgumentException('Given array must be an associative array');
+
+        foreach ($assocArray as $address => $valueOrFormula)
+            $this->write($address, $valueOrFormula);
     }
 
     public function resolve(string $expression): Cell|CellCollection {
