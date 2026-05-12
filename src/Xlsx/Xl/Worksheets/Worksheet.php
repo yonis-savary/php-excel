@@ -4,8 +4,11 @@ namespace PhpExcel\Xlsx\Xl\Worksheets;
 
 use Override;
 use PhpExcel\Abstract\ArchiveFile;
+use PhpExcel\Abstract\CellUtils;
 
-class Worksheet extends ArchiveFile {
+class Worksheet extends ArchiveFile 
+{
+    use CellUtils;
 
     /** @var Row[] */
     protected array $rows = [];
@@ -35,5 +38,17 @@ class Worksheet extends ArchiveFile {
 
     public function getCell(string $cellName): ?Cell {
         return $this->cellMap[$cellName] ?? null;
+    }
+
+    public function write(string $cellName, string $valueOrFormula): Cell {
+        list($column, $row) = $this->parseAddress($cellName);
+        if (!array_key_exists($row, $this->rows)) {
+            $this->rows[$row] = new Row();
+            $this->rows[$row]->number = $row;
+        }
+
+        $cell = $this->rows[$row]->write($column, $valueOrFormula);
+        $this->cellMap[$cellName] = $cell;
+        return $cell;
     }
 }

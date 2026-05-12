@@ -11,7 +11,8 @@ class FormulaParser {
 
     public static function expressionFromFormula(string $formula): Expression {
         $tokenizator = new Tokenisator($formula);
-        return TokenConvertor::convertGroup($tokenizator->getTokenGroup());
+        $convertor = new TokenConvertor();
+        return $convertor->convertGroup($tokenizator->getTokenGroup());
     }
 
     public function __invoke(Cell $cell): Expression

@@ -28,4 +28,16 @@ class StringStream {
     public function rewind() {
         $this->i = 0;
     }
+
+    public function peek(): ?string {
+        return $this->chars[$this->i];
+    }
+
+    public function eatIf(string $expected): ?string {
+        $actual = $this->peek();
+        if ($expected === $actual)
+            return $this->next();
+
+        return null;
+    }
 }

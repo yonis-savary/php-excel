@@ -2,13 +2,17 @@
 
 namespace PhpExcel;
 
+use PhpExcel\Abstract\CellUtils;
 use PhpExcel\Xlsx\SpreadSheet;
 use PhpExcel\Xlsx\Xl\Worksheets\Cell;
 use PhpExcel\Xlsx\Xl\Worksheets\CellCollection;
 use PhpExcel\Xlsx\Xl\Worksheets\Worksheet;
 use RuntimeException;
 
-class CellResolver {
+class CellResolver
+{
+    use CellUtils;
+
     public function __construct(
         protected SpreadSheet $spreadSheet
     )
@@ -28,10 +32,11 @@ class CellResolver {
             $cellName = $expression;
         }
 
-        if ($sheetName) {
-            if (! $sheet = $this->spreadSheet->getSheet($sheetName))
-                throw new RuntimeException("Requested sheet [$sheetName] not found");
-        }
+        $sheet = $sheetName
+            ? $this->spreadSheet->getSheet($sheetName)
+            : $this->spreadSheet->getActiveSheet();
+        if (! $sheet)
+            throw new RuntimeException("Requested sheet [$sheetName] not found");
 
         if (preg_match("~^.+:.+$~", $cellName))
             return $this->resolveCellCollection($sheet, $cellName);

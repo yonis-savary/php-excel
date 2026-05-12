@@ -2,12 +2,14 @@
 
 namespace PhpExcel\Xlsx;
 
+use InvalidArgumentException;
 use PhpExcel\Abstract\ArchiveFile;
+use PhpExcel\Abstract\CellUtils;
 use PhpExcel\Abstract\XMLHolder;
 use PhpExcel\CellResolver;
+use PhpExcel\Processing\Convertion\FormulaParser;
 use PhpExcel\Xlsx\DocProps\App;
 use PhpExcel\Xlsx\DocProps\Core;
-use PhpExcel\Processing\FormulaParser;
 use PhpExcel\Xlsx\Rels\Rels;
 use PhpExcel\Xlsx\Xl\SharedStrings;
 use PhpExcel\Xlsx\Xl\Styles;
@@ -21,6 +23,8 @@ use ZipArchive;
 
 class SpreadSheet extends XMLHolder
 {
+    use CellUtils;
+
     /** @var array<string,class-string<ArchiveFile>> */
     const BASE_FILE_INDEX = [
         'xl/workbook.xml' => Workbook::class,
@@ -140,13 +144,56 @@ class SpreadSheet extends XMLHolder
             }
         }
 
-        $this->activeWorksheet ??= array_values($this->worksheets)[0] ?? null;
+        $this->selectDefaultSheet();
     }
 
     public function getSheet(string $sheetName): ?Worksheet {
+        $this->selectDefaultSheet();
         return $this->worksheets[$sheetName] ?? null;
     }
 
+    protected function selectDefaultSheet() {
+        $this->activeWorksheet ??= array_values($this->worksheets)[0] ?? null;
+    }
+
+    public function getActiveSheet(): Worksheet {
+        $this->createDefaultSheetOnEmpty();
+
+        return $this->activeWorksheet;
+    }
+
+    public function selectSheet(string $sheetName): self {
+        if (!array_key_exists($sheetName, $this->worksheets))
+            throw new InvalidArgumentException("Cannot use sheet $sheetName, inexistent worksheet");
+
+        $this->activeWorksheet = &$this->worksheets[$sheetName];
+        return $this;
+    }
+
+    public function createSheet(string $sheetName): Worksheet {
+        $this->worksheets[$sheetName] ??= new Worksheet();
+        return $this->getSheet($sheetName);
+    }
+
+    protected function createDefaultSheetOnEmpty()
+    {
+        if (!count($this->worksheets))
+            $this->createSheet('Sheet1');
+
+        $this->selectDefaultSheet();
+    }
+
+    public function write(string $address, string $valueOrFormula): Cell {
+        $this->createDefaultSheetOnEmpty();
+
+        list($_, $__, $sheetName) = $this->parseAddress($address);
+
+        $sheet = $sheetName
+            ? $this->getSheet($sheetName)
+            : $this->getActiveSheet();
+
+        return $sheet->write($address, $valueOrFormula);
+    }
 
     public function resolve(string $expression): Cell|CellCollection {
         return $this->cellResolver->resolve($expression);
@@ -154,16 +201,24 @@ class SpreadSheet extends XMLHolder
 
     public function resolveValue(string $expression, ?Cell $preprocessedCell = null): mixed {
         $cell = $preprocessedCell ?? $this->resolve($expression);
-        if (!$cell->formula)
-            return $cell->value;
+        if (!$cell->formula) {
+            return $this->autoTypeValue($cell->value);
+        }
 
         if ($cached = $cell->cachedExpression)
             return $cached->getValue($this);
 
         $parser = new FormulaParser($this);
-        $newExpression = $parser->getCellExpression($cell);
+        $newExpression = $parser($cell);
         $cell->cachedExpression = $newExpression;
 
         return $newExpression->getValue($this);
+    }
+
+    /**
+     * @alias Alias of resolveValue()
+     */
+    public function query(string $expression, ?Cell $preprocessedCell = null): mixed {
+        return $this->resolveValue($expression, $preprocessedCell);
     }
 }

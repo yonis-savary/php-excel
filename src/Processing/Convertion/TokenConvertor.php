@@ -2,12 +2,16 @@
 
 namespace PhpExcel\Processing\Convertion;
 
+use PhpExcel\Abstract\CellUtils;
+use PhpExcel\Processing\Expressions\Cell;
 use PhpExcel\Processing\Expressions\Operations\Addition;
 use PhpExcel\Processing\Expressions\Operations\Division;
 use PhpExcel\Processing\Expressions\Operations\Multiplication;
 use PhpExcel\Processing\Expressions\Operations\Subtraction;
 use PhpExcel\Processing\Expressions\Comparisons\Equal;
+use PhpExcel\Processing\Expressions\Comparisons\GreaterOrEqual;
 use PhpExcel\Processing\Expressions\Comparisons\GreaterThan;
+use PhpExcel\Processing\Expressions\Comparisons\LesserOrEqual;
 use PhpExcel\Processing\Expressions\Comparisons\LesserThan;
 use PhpExcel\Processing\Expressions\CustomFunction;
 use PhpExcel\Processing\Expressions\Expression;
@@ -17,7 +21,9 @@ use PhpExcel\Processing\Tokens\TokenGroup;
 
 class TokenConvertor
 {
-    protected static function convertFunction(TokenGroup $tokenGroup): Expression {
+    use CellUtils;
+
+    protected function convertFunction(TokenGroup $tokenGroup): Expression {
         $tokens = $tokenGroup->getTokens();
         $functionName = $tokens[0];
         $parameterTokens = array_slice($tokens, 1);
@@ -45,7 +51,7 @@ class TokenConvertor
         return new CustomFunction($functionName, ...$parameters);
     }
 
-    public static function convertGroup(TokenGroup $tokenGroup): Expression {
+    public function convertGroup(TokenGroup $tokenGroup): Expression {
         switch ($tokenGroup->specialType) {
             case TokenGroup::TYPE_FUNCTION:
                 return self::convertFunction($tokenGroup);
@@ -60,6 +66,7 @@ class TokenConvertor
         };
 
         $lastExpression = null;
+
         for (; $i>=0; $i--) {
             $tokenOrGroup = $tokens[$i];
 
@@ -75,6 +82,8 @@ class TokenConvertor
                 case '=': return new Equal($restAsExpression(), $lastExpression);
                 case '>': return new GreaterThan($restAsExpression(), $lastExpression);
                 case '<': return new LesserThan($restAsExpression(), $lastExpression);
+                case '>=': return new GreaterOrEqual($restAsExpression(), $lastExpression);
+                case '<=': return new LesserOrEqual($restAsExpression(), $lastExpression);
                 // Operations
                 case '+': return new Addition($restAsExpression(), $lastExpression);
                 case '-': return new Subtraction($restAsExpression(), $lastExpression);
@@ -82,7 +91,9 @@ class TokenConvertor
                 case '/': return new Division($restAsExpression(), $lastExpression);
             }
 
-            $lastExpression = new RawValue($token->string);
+            $lastExpression = $this->isCellAddress($token->string)
+                ? new Cell($token->string)
+                : new RawValue($token->string);
         }
         return $lastExpression;
     }

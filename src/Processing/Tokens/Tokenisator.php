@@ -86,7 +86,7 @@ class Tokenisator {
 
         $flushCurrentExpression = function(int $cropper=0) use (&$currentExpression, $pushTokens) {
             $cropped = substr($currentExpression, 0, $cropper < 0 ? $cropper : null);
-            if (trim($cropped)) {
+            if (strlen(trim($cropped))) {
                 $pushTokens(new Token($cropped));
             } else {
             }
@@ -117,10 +117,18 @@ class Tokenisator {
                 case "/":
                 case "*":
                 case "=":
-                case "<":
-                case ">":
                     $flushCurrentExpression(-1);
                     $pushTokens(new Token($char));
+                    break;
+                case "<":
+                case ">":
+                    if ($_canBeEqual = $this->stream->eatIf('=')) {
+                        $flushCurrentExpression(-1);
+                        $pushTokens(new Token($char . "="));
+                    } else {
+                        $flushCurrentExpression(-1);
+                        $pushTokens(new Token($char));
+                    }
                     break;
                 case '"':
                     $flushCurrentExpression(-1);
@@ -141,9 +149,7 @@ class Tokenisator {
             }
         }
 
-        if ($currentExpression) {
-            $pushTokens(new Token($currentExpression));
-        }
+        $flushCurrentExpression();
 
         return $group;
     }
