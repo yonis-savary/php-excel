@@ -10,7 +10,6 @@ use PhpExcel\CellResolver;
 use PhpExcel\Processing\Convertion\FormulaParser;
 use PhpExcel\Xlsx\DocProps\App;
 use PhpExcel\Xlsx\DocProps\Core;
-use PhpExcel\Xlsx\Rels\Rels;
 use PhpExcel\Xlsx\Xl\SharedStrings;
 use PhpExcel\Xlsx\Xl\Styles;
 use PhpExcel\Xlsx\Xl\Theme\Theme;
@@ -43,7 +42,7 @@ class SpreadSheet extends XMLHolder
     ];
 
     /** @var array<string,ArchiveFile> */
-    protected array $elements = [];
+    public array $elements = [];
 
     /** @var array<string,Theme> */
     protected array $themes = [];
@@ -53,17 +52,25 @@ class SpreadSheet extends XMLHolder
     public ?Worksheet $activeWorksheet = null;
 
     protected ?Workbook $workbook;
+    protected Rels $globalRels;
 
     protected CellResolver $cellResolver;
 
     public function __construct()
     {
         $this->cellResolver = new CellResolver($this);
+        $this->createDefaultWorkbook();
+        $this->createDefaultGlobalRels();
     }
 
-    public static function fromFile(string $file): static
-    {
-        $instance = new static();
+    public function addElement(ArchiveFile $element, ?string $filename = null) {
+        $element->setSpreadsheet($this);
+        $filename ??= $element->getArchiveRelativePath();
+        $this->elements[$filename] = $element;
+    }
+
+    public function openZip(string $file) {
+
         $zip = new ZipArchive();
         if (!$zip->open($file))
             throw new RuntimeException("Could not open $file");
@@ -86,35 +93,67 @@ class SpreadSheet extends XMLHolder
         foreach (self::DIRECTOR_MAPPING as $directory => $classmap) {
             collect($filenames)
                 ->filter(fn($f) => str_starts_with($f, $directory))
-                ->each(fn($f) =>
-                    $instance->elements[$f] = $classmap::fromFile($f, $zip->getFromName($f))
-                );
+                ->each(fn($f) => $this->addElement($classmap::fromFile($f, $zip->getFromName($f)), $f));
         }
 
         foreach (self::BASE_FILE_INDEX as $filename => $classmap) {
             if ($file = $files[$filename] ?? false) {
-                $instance->elements[$filename] = $classmap::fromFile($filename, $zip->getFromName($filename));
+                $this->addElement($classmap::fromFile($filename, $zip->getFromName($filename)), $filename);
             }
         }
 
         foreach ($files as $filename => $_) {
-            if (!array_key_exists($filename, $instance->elements))
-                $instance->elements[$filename] = ArchiveFile::fromFile($filename, $zip->getFromName($filename));
+            if (!array_key_exists($filename, $this->elements))
+                $this->addElement(ArchiveFile::fromFile($filename, $zip->getFromName($filename)), $filename);
         }
 
-        $instance->updateIndexes();
+        $this->updateIndexes();
         $zip->close();
+    }
+
+    public static function fromFile(string $file): static
+    {
+        $instance = new static();
+        $instance->openZip($file);
         return $instance;
+    }
+
+    public function createDefaultWorkbook() {
+        $workbook = new Workbook;
+        $workbookPath = $workbook->getArchiveRelativePath();
+        $this->workbook ??= $workbook;
+        $this->elements[$workbookPath] ??= $workbook;
+    }
+
+    public function createDefaultGlobalRels() {
+        $rels = new Rels;
+        $relsPath = '_rels/.rels';
+        if (!array_key_exists($relsPath, $this->elements)) {
+            $rels->setFilename($relsPath);
+            $this->elements[$relsPath] ??= $rels;
+            $this->globalRels = $rels;
+            $this->globalRels->addRef($this->workbook);
+        }
     }
 
     public function writeFile(string $outputFile) {
 
+        $elements = &$this->elements;
+
+        if (!array_key_exists('[Content_Types].xml', $elements))
+            $this->addElement(new ContentTypes());
+
+        $keys = array_keys($elements);
+        foreach ($keys as $key)
+            $elements[$key]->addChildToSpreadsheet($this);
+
         $zip = new ZipArchive;
         $zip->open($outputFile, ZipArchive::CREATE);
 
-        foreach ($this->elements as $key => $archiveFile) {
+        foreach ($elements as $key => $archiveFile) {
+            $archiveFile->setSpreadsheet($this);
             $zip->addFromString(
-                $archiveFile->getArchiveRelativePath(),  
+                $archiveFile->getArchiveRelativePath(),
                 $archiveFile->toString()
             );
         }
@@ -140,7 +179,10 @@ class SpreadSheet extends XMLHolder
                 if (!array_key_exists($sheetFile, $this->elements))
                     throw new RuntimeException("Could not resolve sheet $sheetName");
 
-                $this->worksheets[$sheetName] = &$this->elements[$sheetFile];
+                /** @var Worksheet $worksheet */
+                $worksheet = &$this->elements[$sheetFile];
+                $worksheet->name = $sheetName;
+                $this->worksheets[$sheetName] = $worksheet;
             }
         }
 
@@ -171,7 +213,16 @@ class SpreadSheet extends XMLHolder
     }
 
     public function createSheet(string $sheetName): Worksheet {
-        $this->worksheets[$sheetName] ??= new Worksheet();
+        if (!array_key_exists($sheetName, $this->worksheets)) {
+            $newSheet = new Worksheet();
+            $newSheet->name = $sheetName;
+            $safeNewSheetName = preg_replace('~[^A-Z\-_0-9\.]~i', '_', $sheetName);
+            $newSheet->setFilename("xl/worksheets/$safeNewSheetName.xml");
+            $this->addElement($newSheet);
+            $this->workbook->addSheet($newSheet);
+            $this->worksheets[$sheetName] = $newSheet;
+        }
+
         return $this->getSheet($sheetName);
     }
 

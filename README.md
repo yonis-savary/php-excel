@@ -21,7 +21,7 @@ $s->write('B1', '5');
 $s->write('C1', '=IF(A1>B1; A1+B1; 0)');
 $s->query('C1') // Returns 13
 
-$s->save('output-file.xlsx') // <= Todo
+$s->save('output-file.xlsx');
 
 ```
 
@@ -34,10 +34,14 @@ $s->save('output-file.xlsx') // <= Todo
 | ✅ | Basic Operator supports (+,-,*,/,>,<,<=,<=,=) |
 | ✅ | Sheet name support for cell name |
 | ✅ | Implements Cell Range system |
-| ⏳ | Possibility to save a new or edited spreadsheet |
+| 🌀 | Possibility to save a new or edited spreadsheet (Developped, need tests) |
 | ⏳ | Implements basics Excel functions such as SUM, POW, SQRT... |
 | ⏳ | Recursion detection system |
 | ⏳ | Write more tests for existing already features |
+
+### TODOS
+
+- Support &lt;dimension&gt; in Worksheet XML data
 
 ## Tests
 

@@ -13,7 +13,7 @@ class CellCollection
         $this->cells = $cells;
     }
 
-    public function addCell(Cell &$cell) {
+    public function addCell(Cell $cell) {
         $this->cells[] = $cell;
     }
 

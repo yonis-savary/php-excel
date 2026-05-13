@@ -2,23 +2,31 @@
 
 namespace PhpExcel\Xlsx\Xl\Worksheets;
 
+use Override;
 use PhpExcel\Abstract\XMLHolder;
 use SimpleXMLElement;
 
 class Row extends XMLHolder
 {
+    const DEFAULT_XML_ATTRIBUTES = [
+        'customFormat' => "false",
+        'ht' => "12.8",
+        'hidden' => "false",
+        'customHeight' => "false",
+        'outlineLevel' => "0" ,
+        'collapsed' => "false",
+    ];
+
     /** @var Cell[] */
     public array $cells = [];
 
     public int $number;
 
-    public function __construct(?SimpleXMLElement $xml = null)
+    public function __construct(SimpleXMLElement $xml)
     {
-        if (!$xml)
-            return;
-
         $this->setData($xml);
-        $this->number = $this->getAttribute('r');
+        if ($number = $this->getAttribute('r'))
+            $this->number = $number;
 
         foreach ($xml->c as $cellXml) {
             $cell = new Cell($cellXml);
@@ -26,17 +34,35 @@ class Row extends XMLHolder
         }
     }
 
-    public function write(string $column, string $valueOrFormula): Cell 
+    #[Override]
+    public function refreshXMLAttributes()
     {
-        if (!array_key_exists($column, $this->cells)) {
-            $cell = new Cell();
-            $cell->column = $column;
-            $cell->region = $column . $this->number;
-            $cell->row = $this->number;
-            $this->cells[$column] = $cell;
-        }
+        $this->xml['r'] = $this->number;
 
-        $cell = &$this->cells[$column];
+        foreach ($this->cells as $c) {
+            $c->refreshXMLAttributes();
+        }
+    }
+
+    protected function createCell(string $column): Cell {
+        $cellXml = $this->getXML()->addChild('c');
+        $cell = new Cell($cellXml);
+        $cell->column = $column;
+        $cell->region = $column . $this->number;
+        $cell->row = $this->number;
+        $cell->type = null;
+        $cell->size = null;
+        $this->cells[$column] = $cell;
+
+        return $cell;
+    }
+
+    public function write(string $column, string $valueOrFormula): Cell
+    {
+        if (!array_key_exists($column, $this->cells))
+            $this->createCell($column);
+
+        $cell = $this->cells[$column];
         if (str_starts_with($valueOrFormula, '=')) {
             $cell->formula = substr($valueOrFormula, 1);
         } else {

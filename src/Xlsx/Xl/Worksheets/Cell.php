@@ -2,6 +2,7 @@
 
 namespace PhpExcel\Xlsx\Xl\Worksheets;
 
+use Override;
 use PhpExcel\Abstract\CellUtils;
 use PhpExcel\Abstract\XMLHolder;
 use PhpExcel\Processing\Expressions\Expression;
@@ -21,21 +22,33 @@ class Cell extends XMLHolder {
 
     public ?Expression $cachedExpression = null;
 
-    public function __construct(?SimpleXMLElement $cellData = null)
+    public function __construct(SimpleXMLElement $cellData)
     {
-        if (!$cellData)
-            return;
-
         $this->setData($cellData);
-        $this->region = $this->getAttribute('r');
-        $this->size = $this->getAttribute('s');
-        $this->type = $this->getAttribute('t');
-        $this->value = $this->xml->v;
-        $this->formula = $this->xml->f;
+        if ($region = $this->getAttribute('r')) $this->region = $region;
+        if ($size = $this->getAttribute('s')) $this->size = $size;
+        if ($type = $this->getAttribute('t')) $this->type = $type;
+        if ($value = $this->xml->v) $this->value = $value;
+        if ($formula = $this->xml->f) $this->formula = $formula;
 
-        list(
-            $this->column,
-            $this->row
-        ) = $this->parseAddress($this->region);
+        if ($this->region){
+            list($this->column, $this->row) = $this->parseAddress($this->region);
+        }
+    }
+
+    #[Override]
+    public function refreshXMLAttributes()
+    {
+        $this->xml['r'] = $this->region;
+
+        if (!is_null($this->size))
+            $this->xml['s'] = $this->size;
+        if (!is_null($this->type))
+            $this->xml['t'] = $this->type;
+
+        if ($this->value)
+            $this->xml->v = $this->value;
+        if ($this->formula)
+            $this->xml->f = $this->formula;
     }
 }

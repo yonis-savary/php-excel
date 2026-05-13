@@ -2,6 +2,7 @@
 
 namespace PhpExcel\Abstract;
 
+use RuntimeException;
 use SimpleXMLElement;
 
 abstract class XMLHolder
@@ -25,7 +26,7 @@ abstract class XMLHolder
     }
 
     public function toString() {
-        return $this->xml->asXML();
+        return $this->getXML()->asXML();
     }
 
 
@@ -44,6 +45,21 @@ abstract class XMLHolder
         $this->dataChanged();
     }
 
+    protected function getDefaultXml(): ?SimpleXMLElement {
+        return null;
+    }
+
+    public function &getXML(): SimpleXMLElement {
+        if (is_null($this->xml)){
+            $this->setData($this->getDefaultXml());
+            if (is_null($this->xml))
+                throw new RuntimeException('No xml content nor default xml defined for this class');
+        }
+        $this->refreshXMLAttributes();
+        return $this->xml;
+    }
+
+    protected function refreshXMLAttributes() {}
 
     protected function getAttribute(string $attribute, ?SimpleXMLElement $element = null): ?string {
         $element ??= $this->xml;
