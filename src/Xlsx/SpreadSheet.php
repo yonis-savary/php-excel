@@ -136,8 +136,11 @@ class SpreadSheet extends XMLHolder
         }
     }
 
-    public function writeFile(string $outputFile) {
-
+    /**
+     * @return array<string,string> Returns an array as filename => content, used to write the final zip file
+     */
+    public function toArray(): array
+    {
         $elements = &$this->elements;
 
         if (!array_key_exists('[Content_Types].xml', $elements))
@@ -147,16 +150,25 @@ class SpreadSheet extends XMLHolder
         foreach ($keys as $key)
             $elements[$key]->addChildToSpreadsheet($this);
 
+        $entries = [];
+        foreach ($elements as $key => $archiveFile) {
+            $archiveFile->setSpreadsheet($this);
+            $entries[$archiveFile->getArchiveRelativePath()] = $archiveFile->toString();
+        }
+
+        ksort($entries);
+        return $entries;
+    }
+
+    public function writeFile(string $outputFile)
+    {
+        $entries = $this->toArray();
+
         $zip = new ZipArchive;
         $zip->open($outputFile, ZipArchive::CREATE);
 
-        foreach ($elements as $key => $archiveFile) {
-            $archiveFile->setSpreadsheet($this);
-            $zip->addFromString(
-                $archiveFile->getArchiveRelativePath(),
-                $archiveFile->toString()
-            );
-        }
+        foreach ($entries as $filename => $content)
+            $zip->addFromString($filename, $content);
 
         $zip->close();
     }

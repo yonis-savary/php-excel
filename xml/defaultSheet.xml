@@ -13,7 +13,6 @@
             showZeros="true" rightToLeft="false" tabSelected="false" showOutlineSymbols="true"
             defaultGridColor="true" view="normal" topLeftCell="A1" colorId="64" zoomScale="100"
             zoomScaleNormal="100" zoomScalePageLayoutView="100" workbookViewId="0">
-            <selection pane="topLeft" activeCell="C3" activeCellId="0" sqref="C3" />
         </sheetView>
     </sheetViews>
     <sheetFormatPr defaultColWidth="11.53515625" defaultRowHeight="12.8" zeroHeight="false"
